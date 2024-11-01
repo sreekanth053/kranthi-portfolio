@@ -6,10 +6,10 @@ import Skills from './components/Skills';
 import Services from './components/Services';
 import Projects from './components/Projects';
 import Contact from './components/Contact';
-import Footer from './components/Footer'; // Import the Footer component
+import Footer from './components/Footer';
 
 function App() {
-  // Create individual refs at the top level of the component
+  // Creating refs for each section
   const homeRef = useRef(null);
   const aboutRef = useRef(null);
   const skillsRef = useRef(null);
@@ -17,33 +17,30 @@ function App() {
   const projectsRef = useRef(null);
   const contactRef = useRef(null);
 
-  // Memoize the sections object to ensure it doesn't change on every render
-  const sections = useMemo(
-    () => ({
-      home: homeRef,
-      about: aboutRef,
-      skills: skillsRef,
-      services: servicesRef,
-      projects: projectsRef,
-      contact: contactRef,
-    }),
-    [] // Empty dependency array ensures memoization across renders
-  );
+  // Memoized sections object to optimize re-rendering
+  const sectionRefs = useMemo(() => ({
+    home: homeRef,
+    about: aboutRef,
+    skills: skillsRef,
+    services: servicesRef,
+    projects: projectsRef,
+    contact: contactRef,
+  }), []);
 
-  // State to track the currently active section
+  // State to store active section for navigation highlighting
   const [activeSection, setActiveSection] = useState('home');
 
-  // Function to scroll to a particular section
-  const scrollToSection = (section) => {
-    sections[section].current.scrollIntoView({ behavior: 'smooth' });
+  // Scroll to a specific section when nav item is clicked
+  const handleScrollToSection = (section) => {
+    sectionRefs[section].current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Use IntersectionObserver to track section visibility and update active navbar item
+  // Update active section based on scrolling
   useEffect(() => {
     const observerOptions = {
       root: null,
       rootMargin: '0px',
-      threshold: 0.3, // Adjust this value to control when a section is considered in view
+      threshold: 0.4,
     };
 
     const observerCallback = (entries) => {
@@ -57,85 +54,44 @@ function App() {
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);
 
-    // Observe each section
-    Object.values(sections).forEach((ref) => {
-      if (ref.current) {
-        observer.observe(ref.current);
-      }
+    // Start observing each section
+    Object.values(sectionRefs).forEach((ref) => {
+      if (ref.current) observer.observe(ref.current);
     });
 
-    // Cleanup the observer when the component unmounts
+    // Cleanup observer on component unmount
     return () => {
       observer.disconnect();
     };
-  }, [sections]); // Include 'sections' as a dependency
+  }, [sectionRefs]);
 
   return (
     <div className="App">
-      {/* Header with Sticky Navbar */}
+      {/* Navbar */}
       <header className="navbar">
         <nav>
           <ul>
-            <li className="portfolio">Portfolio</li>
-            <li
-              onClick={() => scrollToSection('home')}
-              className={activeSection === 'home' ? 'active' : ''}
-            >
-              Home
-            </li>
-            <li
-              onClick={() => scrollToSection('about')}
-              className={activeSection === 'about' ? 'active' : ''}
-            >
-              About
-            </li>
-            <li
-              onClick={() => scrollToSection('skills')}
-              className={activeSection === 'skills' ? 'active' : ''}
-            >
-              Skills
-            </li>
-            <li
-              onClick={() => scrollToSection('services')}
-              className={activeSection === 'services' ? 'active' : ''}
-            >
-              Services
-            </li>
-            <li
-              onClick={() => scrollToSection('projects')}
-              className={activeSection === 'projects' ? 'active' : ''}
-            >
-              Projects
-            </li>
-            <li
-              onClick={() => scrollToSection('contact')}
-              className={activeSection === 'contact' ? 'active' : ''}
-            >
-              Contact
-            </li>
+            <li className="portfolio-title">Portfolio</li>
+            {Object.keys(sectionRefs).map((section) => (
+              <li
+                key={section}
+                onClick={() => handleScrollToSection(section)}
+                className={activeSection === section ? 'active' : ''}
+              >
+                {section.charAt(0).toUpperCase() + section.slice(1)}
+              </li>
+            ))}
           </ul>
         </nav>
       </header>
 
       {/* Sections */}
-      <div id="home" ref={homeRef}>
-        <Home />
-      </div>
-      <div id="about" ref={aboutRef}>
-        <About />
-      </div>
-      <div id="skills" ref={skillsRef}>
-        <Skills />
-      </div>
-      <div id="services" ref={servicesRef}>
-        <Services />
-      </div>
-      <div id="projects" ref={projectsRef}>
-        <Projects />
-      </div>
-      <div id="contact" ref={contactRef}>
-        <Contact />
-      </div>
+      <div id="home" ref={homeRef}><Home /></div>
+      <div id="about" ref={aboutRef}><About /></div>
+      <div id="skills" ref={skillsRef}><Skills /></div>
+      <div id="services" ref={servicesRef}><Services /></div>
+      <div id="projects" ref={projectsRef}><Projects /></div>
+      <div id="contact" ref={contactRef}><Contact /></div>
 
       {/* Footer */}
       <Footer />
